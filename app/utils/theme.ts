@@ -1,5 +1,5 @@
 export const fonts = {
-  title: "font-black tracking-tight",
+  title: "font-bebas font-black tracking-tight",
   body: "font-sans", 
 };
 
