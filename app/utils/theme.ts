@@ -11,8 +11,8 @@ export const colors = {
   },
   text: {
     white: "text-white",
-    gray: "text-gray-300",
-    subtle: "text-gray-400",
+    gray: "text-gray-200",
+    subtle: "text-gray-300",
     link: "text-blue-400 hover:text-blue-300",
   },
   border: {

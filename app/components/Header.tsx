@@ -14,11 +14,11 @@ export default function Header() {
                     </div>
 
                     <div className='text-left'>
-                        <h1 className={`${colors.text.white} text-4xl md:text-5xl lg:text-6xl ${fonts.title} mb-2`}>
+                        <h1 className={`${colors.text.white}  text-2xl md:text-5xl ${fonts.title} mb-2`}>
                             MURAL DE PROJETOS
                         </h1>
 
-                        <p className={`${colors.text.subtle} text-sm ${fonts.body} mt-2`}>
+                        <p className={`${colors.text.subtle} text-lg ${fonts.body} mt-2`}>
                             Liga Acadêmica de Engenharia de Software - SEAL
                         </p>
                     </div>
