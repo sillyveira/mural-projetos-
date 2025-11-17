@@ -6,6 +6,7 @@ import {
   searchProjects,
   type ProjectStatus 
 } from '@/lib/projects';
+import { uploadImage } from '@/lib/cloudinary';
 
 /**
  * GET - Listar projetos
@@ -65,30 +66,42 @@ export async function GET(request: Request) {
 
 /**
  * POST - Adicionar novo projeto
- * Body esperado:
- * {
- *   "title": "string",
- *   "description": "string",
- *   "author": "string",
- *   "githubUrl": "string",
- *   "status": "FINALIZADO" | "EM DESENVOLVIMENTO",
- *   "imageUrl": "string"
- * }
+ * Body esperado (FormData):
+ * - title: string
+ * - description: string
+ * - author: string
+ * - githubUrl: string
+ * - status: "FINALIZADO" | "EM DESENVOLVIMENTO"
+ * - image: File (arquivo da imagem)
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    // Receber FormData ao invés de JSON
+    const formData = await request.formData();
+    
+    // Extrair campos do FormData
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const author = formData.get('author') as string;
+    const githubUrl = formData.get('githubUrl') as string;
+    const status = formData.get('status') as ProjectStatus;
+    const imageFile = formData.get('image') as File | null;
     
     // Validação de campos obrigatórios
-    const requiredFields = ['title', 'description', 'author', 'githubUrl', 'status', 'imageUrl'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
-    if (missingFields.length > 0) {
+    if (!title || !description || !author || !githubUrl || !status || !imageFile) {
+      const missingFields = [];
+      if (!title) missingFields.push('title');
+      if (!description) missingFields.push('description');
+      if (!author) missingFields.push('author');
+      if (!githubUrl) missingFields.push('githubUrl');
+      if (!status) missingFields.push('status');
+      if (!imageFile) missingFields.push('image');
+      
       return NextResponse.json(
         {
           success: false,
           error: 'Campos obrigatórios faltando',
-          required: requiredFields,
+          required: ['title', 'description', 'author', 'githubUrl', 'status', 'image'],
           missing: missingFields
         },
         { status: 400 }
@@ -96,7 +109,7 @@ export async function POST(request: Request) {
     }
     
     // Validação do campo status
-    if (body.status !== 'FINALIZADO' && body.status !== 'EM DESENVOLVIMENTO') {
+    if (status !== 'FINALIZADO' && status !== 'EM DESENVOLVIMENTO') {
       return NextResponse.json(
         {
           success: false,
@@ -107,29 +120,68 @@ export async function POST(request: Request) {
       );
     }
     
-    // Validação básica de URL
+    // Validação básica de URL do GitHub
     try {
-      new URL(body.githubUrl);
-      new URL(body.imageUrl);
+      new URL(githubUrl);
     } catch {
       return NextResponse.json(
         {
           success: false,
           error: 'URL inválida',
-          message: 'githubUrl e imageUrl devem ser URLs válidas'
+          message: 'githubUrl deve ser uma URL válida'
         },
         { status: 400 }
       );
     }
     
-    // Criar projeto no MongoDB
+    // Validação do tipo de arquivo
+    if (!imageFile.type.startsWith('image/')) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Tipo de arquivo inválido',
+          message: 'O arquivo deve ser uma imagem'
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Validação do tamanho do arquivo (máximo 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (imageFile.size > maxSize) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Arquivo muito grande',
+          message: 'O arquivo deve ter no máximo 5MB'
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Upload da imagem para o Cloudinary
+    let imageUrl: string;
+    try {
+      imageUrl = await uploadImage(imageFile);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Erro ao fazer upload da imagem',
+          message: error instanceof Error ? error.message : 'Erro desconhecido'
+        },
+        { status: 500 }
+      );
+    }
+    
+    // Criar projeto no MongoDB com a URL do Cloudinary
     const newProject = await createProject({
-      title: body.title,
-      description: body.description,
-      author: body.author,
-      githubUrl: body.githubUrl,
-      status: body.status,
-      imageUrl: body.imageUrl,
+      title,
+      description,
+      author,
+      githubUrl,
+      status,
+      imageUrl,
     });
     
     return NextResponse.json(
