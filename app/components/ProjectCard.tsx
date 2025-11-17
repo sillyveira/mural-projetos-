@@ -1,30 +1,22 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { colors, fonts } from '../utils/theme';
+import { type Project } from '@/lib/projects';
 
-export type ProjectStatus = 'featured' | 'live' | 'development';
+export type ProjectStatus = 'FINALIZADO' | 'EM DESENVOLVIMENTO';
 
-export interface Project {
-  id: string;
-  title: string;
-  description: string;
-  author: string;
-  githubUrl: string;
-  status: ProjectStatus;
-  imageUrl: string;
-}
+
 
 interface ProjectCardProps {
   project: Project;
 }
 
 const statusConfig: Record<ProjectStatus, { label: string; className: string }> = {
-  featured: { label: 'EM DESTAQUE', className: 'bg-yellow-500 text-gray-900' },
-  live: { label: 'AO VIVO', className: 'bg-status-live text-white' },
-  development: { label: 'EM DESENVOLVIMENTO', className: 'bg-status-development text-white' },
+  'FINALIZADO': { label: 'FINALIZADO', className: 'bg-status-live text-white' },
+  'EM DESENVOLVIMENTO': { label: 'EM DESENVOLVIMENTO', className: 'bg-status-development text-white' },
 };
 
 export const ProjectCard = ({ project }: ProjectCardProps) => {
-  const statusInfo = statusConfig[project.status];
+  const statusInfo = statusConfig[project.status] || statusConfig['EM DESENVOLVIMENTO'];
 
   return (
     <div className={`relative ${colors.background.card} ${colors.border.default} ${colors.border.hover} rounded-lg overflow-hidden transition-all duration-300 group h-full flex flex-col`}>

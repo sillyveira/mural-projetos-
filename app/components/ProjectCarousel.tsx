@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { ProjectCard, Project } from './ProjectCard';
-
+import { ProjectCard} from './ProjectCard';
+import { type Project } from '@/lib/projects';
 interface ProjectCarouselProps {
   projects: Project[];
   visibleCount?: number;
@@ -42,6 +42,10 @@ export const ProjectCarousel = ({
         index = index - projects.length;
       }
 
+      // Verifica se o projeto existe no índice calculado
+      const project = projects[index];
+      if (!project) continue;
+
       let position: 'left' | 'center' | 'right' | 'side';
       
       if (i === 0) {
@@ -54,7 +58,7 @@ export const ProjectCarousel = ({
         position = 'side';
       }
 
-      visible.push({ project: projects[index], position });
+      visible.push({ project, position });
     }
 
     return visible;
@@ -92,12 +96,14 @@ export const ProjectCarousel = ({
       {/* Container do carrossel */}
       <div className="flex items-center justify-center gap-8 px-8">
         {visibleProjects.map(({ project, position }, idx) => (
-          <div
-            key={`${project.id}-${idx}`}
-            className={getCardClasses(position)}
-          >
-            <ProjectCard project={project} />
-          </div>
+          project && (
+            <div
+              key={`${project.id}-${idx}`}
+              className={getCardClasses(position)}
+            >
+              <ProjectCard project={project} />
+            </div>
+          )
         ))}
       </div>
 

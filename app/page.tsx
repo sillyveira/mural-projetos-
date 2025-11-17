@@ -2,69 +2,87 @@
 
 import Header from './components/Header';
 import { ProjectCarousel } from './components/ProjectCarousel';
-import { Project } from './components/ProjectCard';
+import { type Project } from '@/lib/projects';
+import { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 
 export default function Home() {
-  // Lista de projetos de exemplo
-  const projects: Project[] = [
-    {
-      id: "1",
-      author: "Wesley, Amanda e Josias",
-      title: "Mural de Projetos",
-      description: "Um projeto para dispor um mural digital dos projetos submetidos por alunos.",
-      githubUrl: "https://github.com/seal-ufpe/mural-projetos",
-      status: "live",
-      imageUrl: "https://b2midia.com.br/wp-content/uploads/2024/08/03-feature-multizonas.jpg"
-    },
-    {
-      id: "2",
-      author: "Equipe SEAL",
-      title: "Sistema de Gestão",
-      description: "Sistema completo para gestão de projetos acadêmicos com foco em engenharia de software.",
-      githubUrl: "https://github.com/seal-ufpe/sistema-gestao",
-      status: "development",
-      imageUrl: "https://b2midia.com.br/wp-content/uploads/2024/08/03-feature-multizonas.jpg"
-    },
-    {
-      id: "3",
-      author: "João Silva",
-      title: "Projeto em Destaque",
-      description: "Um projeto inovador que está transformando a forma como desenvolvemos software.",
-      githubUrl: "https://github.com/seal-ufpe/projeto-destaque",
-      status: "featured",
-      imageUrl: "https://b2midia.com.br/wp-content/uploads/2024/08/03-feature-multizonas.jpg"
-    },
-    {
-      id: "4",
-      author: "Maria Santos",
-      title: "App Mobile SEAL",
-      description: "Aplicativo mobile para facilitar o acesso aos projetos e eventos da liga.",
-      githubUrl: "https://github.com/seal-ufpe/app-mobile",
-      status: "live",
-      imageUrl: "https://b2midia.com.br/wp-content/uploads/2024/08/03-feature-multizonas.jpg"
-    },
-    {
-      id: "5",
-      author: "Pedro Costa",
-      title: "Dashboard Analytics",
-      description: "Dashboard interativo para análise de dados e métricas dos projetos.",
-      githubUrl: "https://github.com/seal-ufpe/dashboard",
-      status: "development",
-      imageUrl: "https://b2midia.com.br/wp-content/uploads/2024/08/03-feature-multizonas.jpg"
-    }
-  ];
+  const [projetos, setProjetos] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/');
+        
+        if (response.status === 200) {
+          const result = await response.json();
+          
+          if (result.success && result.data) {
+            const newProjects = result.data as Project[];
+            
+            // Filtra apenas projetos que ainda não existem na lista
+            const existingIds = new Set(projetos.map(p => p.id));
+            const trulyNewProjects = newProjects.filter(p => !existingIds.has(p.id));
+            
+            if (trulyNewProjects.length > 0) {
+              // Adiciona novos projetos à lista existente
+              setProjetos(prevProjects => [...prevProjects, ...trulyNewProjects]);
+              
+              // Mostra toast com a quantidade de novos projetos
+              toast.success(
+                `${trulyNewProjects.length} ${trulyNewProjects.length === 1 ? 'novo projeto adicionado' : 'novos projetos adicionados'}!`,
+                {
+                  duration: 4000,
+                  position: 'top-right',
+                  style: {
+                    background: '#1a1a1a',
+                    color: '#fff',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                  },
+                }
+              );
+            } else if (projetos.length === 0) {
+              // Primeira carga - apenas define os projetos sem toast
+              setProjetos(newProjects);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao buscar projetos:', error);
+        toast.error('Erro ao carregar projetos', {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid rgba(255, 100, 100, 0.5)',
+          },
+        });
+      }
+    };
+
+    fetchProjects();
+    
+    // Opcional: buscar novos projetos periodicamente (a cada 30 segundos)
+    const interval = setInterval(fetchProjects, 30000);
+    
+    return () => clearInterval(interval);
+  }, [projetos]);
 
   return (
     <main className="bg-primary min-h-screen">
+      <Toaster />
       <Header />
 
       <div className=''>
-        <ProjectCarousel 
-          projects={projects}
+        {
+          projetos.length > 0 && <ProjectCarousel 
+          projects={projetos}
           visibleCount={4}
           autoPlayInterval={5000}
         />
+        }
       </div>
 
     </main>
