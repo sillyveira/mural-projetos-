@@ -1,11 +1,12 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configuração do Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Configuração do Cloudinary usando URL
+// Formato: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(process.env.CLOUDINARY_URL);
+} else {
+  throw new Error('CLOUDINARY_URL não configurada');
+}
 
 /**
  * Faz upload de uma imagem para o Cloudinary
