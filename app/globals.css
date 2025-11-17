@@ -10,6 +10,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Custom colors for SEAL project */
+  --color-primary: #1E2D3C;
+  --color-secondary: #2A3F52;
+  --color-card: #3A4F62;
+  --color-status-live: #10b981;
+  --color-status-development: #3b82f6;
 }
 
 @media (prefers-color-scheme: dark) {
