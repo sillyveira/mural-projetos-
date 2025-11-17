@@ -5,9 +5,9 @@ export const fonts = {
 
 export const colors = {
   background: {
-    primary: "bg-[#1E2D3C]",
-    secondary: "bg-[#2A3F52]",
-    card: "bg-[#2A3F52]",
+    primary: "bg-primary",
+    secondary: "bg-secondary",
+    card: "bg-secondary",
   },
   text: {
     white: "text-white",
