@@ -12,9 +12,10 @@ export default function TestAPIPage() {
     description: 'Descrição do projeto de teste',
     author: 'João Silva',
     githubUrl: 'https://github.com/test/project',
-    status: 'EM DESENVOLVIMENTO',
-    imageUrl: 'https://picsum.photos/400/300'
+    status: 'EM DESENVOLVIMENTO'
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Estados para GET
   const [filters, setFilters] = useState({
@@ -50,10 +51,21 @@ export default function TestAPIPage() {
   const handlePOST = async () => {
     setLoading(true);
     try {
+      // Criar FormData para enviar o arquivo
+      const formData = new FormData();
+      formData.append('title', newProject.title);
+      formData.append('description', newProject.description);
+      formData.append('author', newProject.author);
+      formData.append('githubUrl', newProject.githubUrl);
+      formData.append('status', newProject.status);
+      
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+      
       const res = await fetch('/api', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProject)
+        body: formData // Não definir Content-Type, o browser faz automaticamente
       });
       const data = await res.json();
       setResponse({ method: 'POST', status: res.status, data });
@@ -61,6 +73,22 @@ export default function TestAPIPage() {
       setResponse({ method: 'POST', error: String(error) });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      // Criar preview da imagem
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImageFile(null);
+      setImagePreview(null);
     }
   };
 
@@ -173,13 +201,6 @@ export default function TestAPIPage() {
                   onChange={(e) => setNewProject({...newProject, githubUrl: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <input
-                  type="url"
-                  placeholder="URL da Imagem"
-                  value={newProject.imageUrl}
-                  onChange={(e) => setNewProject({...newProject, imageUrl: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
                 <select
                   value={newProject.status}
                   onChange={(e) => setNewProject({...newProject, status: e.target.value})}
@@ -188,9 +209,35 @@ export default function TestAPIPage() {
                   <option value="EM DESENVOLVIMENTO">EM DESENVOLVIMENTO</option>
                   <option value="FINALIZADO">FINALIZADO</option>
                 </select>
+                
+                {/* Upload de Imagem */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Imagem do Projeto *
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-48 object-cover rounded-md border border-gray-300"
+                      />
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Formatos aceitos: JPG, PNG, GIF. Máximo: 5MB
+                  </p>
+                </div>
+                
                 <button
                   onClick={handlePOST}
-                  disabled={loading}
+                  disabled={loading || !imageFile}
                   className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium"
                 >
                   {loading ? 'Criando...' : 'Criar Projeto'}
