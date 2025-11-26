@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Toaster, toast } from 'react-hot-toast';
 import React, { useState } from "react";
 import Image from "next/image";
 import { z } from "zod";
@@ -110,14 +111,15 @@ export default function ProjectForm() {
         throw new Error(result.error || result.message || 'Erro ao enviar o formulário');
       }
 
-      // Redirecionar para home após sucesso
-      router.push('/');
+      toast.success('Projeto enviado com sucesso!');
+
     } catch (error) {
       if (error instanceof z.ZodError) {
         setErrors(error.flatten((issue) => issue.message).fieldErrors);
+        toast.error('Verifique os campos obrigatórios');
       } else {
         console.error('Erro ao enviar:', error);
-        alert(error instanceof Error ? error.message : 'Erro ao enviar projeto');
+        toast.error(error instanceof Error ? error.message : 'Erro ao enviar projeto');
       }
     } finally {
       setIsSubmitting(false);
@@ -299,6 +301,7 @@ export default function ProjectForm() {
           </div>
         </form>
       </div>
+      <Toaster position="bottom-right" />
     </div>
   );
 }
